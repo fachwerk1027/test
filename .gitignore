@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英検単語クイズ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        .card {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #4a5568;
+        }
+        .correct-answer {
+            background-color: #10b981;
+            color: white;
+        }
+        .incorrect-answer {
+            background-color: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="container text-center">
+        <div id="start-screen" class="card">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">英検単語クイズ</h1>
+            <p class="text-gray-600 mb-8">レベルを選んでクイズを始めよう！</p>
+            <div id="level-selection" class="flex flex-col space-y-4">
+                <button data-level="5" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検5級</button>
+                <button data-level="4" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検4級</button>
+                <button data-level="3" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検3級</button>
+                <button data-level="p2" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検準2級</button>
+                <button data-level="2" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検2級</button>
+                <button data-level="p1" class="level-button w-full py-3 px-6 rounded-lg text-lg font-semibold bg-blue-500 text-white shadow-lg transition-transform transform hover:scale-105">英検準1級</button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="card hidden">
+            <h2 id="level-title" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <p id="question-counter" class="text-gray-500 mb-2"></p>
+            <div id="score-display" class="text-gray-700 font-semibold mb-6">スコア: <span id="current-score">0</span> / 10</div>
+            <p id="word" class="text-4xl font-bold text-gray-800 mb-8"></p>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="feedback" class="text-center mt-6 text-xl font-semibold"></div>
+        </div>
+
+        <div id="result-screen" class="card hidden">
+            <h2 id="result-title" class="text-3xl font-bold text-gray-800 mb-4"></h2>
+            <p id="result-score" class="text-4xl font-bold text-blue-500 mb-6"></p>
+            <div id="next-level-button" class="hidden">
+                <button class="w-full py-3 px-6 rounded-lg text-lg font-semibold bg-green-500 text-white shadow-lg transition-transform transform hover:scale-105" onclick="nextLevel()">次のレベルに進む</button>
+            </div>
+            <button class="w-full py-3 px-6 rounded-lg text-lg font-semibold bg-gray-500 text-white shadow-lg transition-transform transform hover:scale-105 mt-4" onclick="restartQuiz()">最初に戻る</button>
+        </div>
+    </div>
+
+    <script>
+        const words = {
+            '5': [
+                { word: 'apple', meaning: 'りんご' },
+                { word: 'dog', meaning: '犬' },
+                { word: 'cat', meaning: '猫' },
+                { word: 'book', meaning: '本' },
+                { word: 'pen', meaning: 'ペン' },
+                { word: 'bus', meaning: 'バス' },
+                { word: 'train', meaning: '電車' },
+                { word: 'school', meaning: '学校' },
+                { word: 'friend', meaning: '友達' },
+                { word: 'family', meaning: '家族' },
+                { word: 'hello', meaning: 'こんにちは' },
+                { word: 'goodbye', meaning: 'さようなら' },
+                { word: 'yes', meaning: 'はい' },
+                { word: 'no', meaning: 'いいえ' },
+                { word: 'water', meaning: '水' }
+            ],
+            '4': [
+                { word: 'breakfast', meaning: '朝食' },
+                { word: 'dinner', meaning: '夕食' },
+                { word: 'library', meaning: '図書館' },
+                { word: 'hospital', meaning: '病院' },
+                { word: 'summer', meaning: '夏' },
+                { word: 'winter', meaning: '冬' },
+                { word: 'yesterday', meaning: '昨日' },
+                { word: 'today', meaning: '今日' },
+                { word: 'tomorrow', meaning: '明日' },
+                { word: 'morning', meaning: '朝' },
+                { word: 'afternoon', meaning: '午後' },
+                { word: 'street', meaning: '通り' },
+                { word: 'kitchen', meaning: '台所' },
+                { word: 'country', meaning: '国' },
+                { word: 'beautiful', meaning: '美しい' }
+            ],
+            '3': [
+                { word: 'important', meaning: '重要な' },
+                { word: 'dangerous', meaning: '危険な' },
+                { word: 'difficult', meaning: '難しい' },
+                { word: 'easy', meaning: '簡単な' },
+                { word: 'excited', meaning: 'わくわくした' },
+                { word: 'hungry', meaning: '空腹の' },
+                { word: 'remember', meaning: '覚えている' },
+                { word: 'forget', meaning: '忘れる' },
+                { word: 'continue', meaning: '続ける' },
+                { word: 'practice', meaning: '練習する' },
+                { word: 'explain', meaning: '説明する' },
+                { word: 'answer', meaning: '答える' },
+                { word: 'problem', meaning: '問題' },
+                { word: 'decision', meaning: '決定' },
+                { word: 'success', meaning: '成功' }
+            ],
+            'p2': [
+                { word: 'globalization', meaning: 'グローバル化' },
+                { word: 'sustainability', meaning: '持続可能性' },
+                { word: 'investment', meaning: '投資' },
+                { word: 'environment', meaning: '環境' },
+                { word: 'influence', meaning: '影響' },
+                { word: 'commercial', meaning: '商業の' },
+                { word: 'challenge', meaning: '課題' },
+                { word: 'development', meaning: '開発' },
+                { word: 'population', meaning: '人口' },
+                { word: 'technology', meaning: '科学技術' },
+                { word: 'education', meaning: '教育' },
+                { word: 'society', meaning: '社会' },
+                { word: 'culture', meaning: '文化' },
+                { word: 'communication', meaning: 'コミュニケーション' },
+                { word: 'opportunity', meaning: '機会' }
+            ],
+            '2': [
+                { word: 'diversity', meaning: '多様性' },
+                { word: 'renewable', meaning: '再生可能な' },
+                { word: 'urbanization', meaning: '都市化' },
+                { word: 'legislation', meaning: '法律制定' },
+                { word: 'unemployment', meaning: '失業' },
+                { word: 'infrastructure', meaning: 'インフラ' },
+                { word: 'consumption', meaning: '消費' },
+                { word: 'conservation', meaning: '保全' },
+                { word: 'extinction', meaning: '絶滅' },
+                { word: 'sustainable', meaning: '持続可能な' },
+                { word: 'alternative', meaning: '代替の' },
+                { word: 'innovative', meaning: '革新的な' },
+                { word: 'global', meaning: '地球規模の' },
+                { word: 'local', meaning: '地元の' },
+                { word: 'traditional', meaning: '伝統的な' }
+            ],
+            'p1': [
+                { word: 'paradigm', meaning: 'パラダイム' },
+                { word: 'ubiquitous', meaning: 'どこにでもある' },
+                { word: 'nebulous', meaning: '漠然とした' },
+                { word: 'ostracize', meaning: '追放する' },
+                { word: 'perfunctory', meaning: 'おざなりの' },
+                { word: 'proliferate', meaning: '急増する' },
+                { word: 'recalcitrant', meaning: '反抗的な' },
+                { word: 'sanctimonious', meaning: '独善的な' },
+                { word: 'schadenfreude', meaning: '他人の不幸を喜ぶ気持ち' },
+                { word: 'serendipity', meaning: '思わぬ発見をする才能' },
+                { word: 'subjugate', meaning: '征服する' },
+                { word: 'surreptitious', meaning: 'こっそり行う' },
+                { word: 'vicarious', meaning: '自分のことのように感じる' },
+                { word: 'zeitgeist', meaning: '時代精神' },
+                { word: 'aberration', meaning: '常軌を逸した行動' }
+            ]
+        };
+
+        const levelNames = {
+            '5': '英検5級',
+            '4': '英検4級',
+            '3': '英検3級',
+            'p2': '英検準2級',
+            '2': '英検2級',
+            'p1': '英検準1級'
+        };
+
+        let currentLevel;
+        let quizData = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const levelSelection = document.getElementById('level-selection');
+        const levelTitle = document.getElementById('level-title');
+        const questionCounter = document.getElementById('question-counter');
+        const wordElement = document.getElementById('word');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackElement = document.getElementById('feedback');
+        const currentScoreElement = document.getElementById('current-score');
+        const resultTitle = document.getElementById('result-title');
+        const resultScore = document.getElementById('result-score');
+        const nextLevelButton = document.getElementById('next-level-button');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz(level) {
+            currentLevel = level;
+            score = 0;
+            currentQuestionIndex = 0;
+
+            const allWords = words[currentLevel];
+            shuffleArray(allWords);
+
+            quizData = allWords.slice(0, 10);
+            if (quizData.length < 10) {
+                // 単語が10個未満の場合は、単語リストを複製して使用する
+                let tempWords = [...allWords];
+                while(quizData.length < 10) {
+                    quizData = quizData.concat(tempWords.slice(0, 10 - quizData.length));
+                }
+            }
+
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            levelTitle.textContent = levelNames[currentLevel];
+            currentScoreElement.textContent = score;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResult();
+                return;
+            }
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            wordElement.textContent = currentQuestion.word;
+            questionCounter.textContent = `${currentQuestionIndex + 1} / 10`;
+            optionsContainer.innerHTML = '';
+            feedbackElement.textContent = '';
+
+            const meanings = words[currentLevel].map(w => w.meaning);
+            shuffleArray(meanings);
+
+            const correctMeaning = currentQuestion.meaning;
+            let options = new Set([correctMeaning]);
+            while (options.size < 4) {
+                const randomMeaning = meanings[Math.floor(Math.random() * meanings.length)];
+                if (randomMeaning !== correctMeaning) {
+                    options.add(randomMeaning);
+                }
+            }
+
+            const finalOptions = Array.from(options);
+            shuffleArray(finalOptions);
+
+            finalOptions.forEach(meaning => {
+                const button = document.createElement('button');
+                button.textContent = meaning;
+                button.classList.add('option-button', 'py-3', 'px-6', 'rounded-lg', 'text-lg', 'font-semibold', 'bg-gray-200', 'text-gray-800', 'hover:bg-gray-300', 'transition-colors', 'duration-200');
+                button.onclick = () => checkAnswer(meaning, correctMeaning);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedMeaning, correctMeaning) {
+            const buttons = optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correctMeaning) {
+                    button.classList.add('correct-answer');
+                    button.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+                } else if (button.textContent === selectedMeaning) {
+                    button.classList.add('incorrect-answer');
+                    button.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+                }
+            });
+
+            if (selectedMeaning === correctMeaning) {
+                score++;
+                currentScoreElement.textContent = score;
+                feedbackElement.textContent = '正解！';
+                feedbackElement.classList.remove('text-red-500');
+                feedbackElement.classList.add('text-green-500');
+            } else {
+                feedbackElement.textContent = `不正解... 正解は「${correctMeaning}」です`;
+                feedbackElement.classList.remove('text-green-500');
+                feedbackElement.classList.add('text-red-500');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1500);
+        }
+
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            resultTitle.textContent = `${levelNames[currentLevel]} クイズ終了！`;
+            resultScore.textContent = `${score} / 10点`;
+
+            const nextLevel = getNextLevel(currentLevel);
+            if (score === 10 && nextLevel) {
+                resultTitle.textContent = '全問正解！おめでとう！';
+                nextLevelButton.classList.remove('hidden');
+            } else {
+                nextLevelButton.classList.add('hidden');
+            }
+        }
+
+        function getNextLevel(level) {
+            const levels = ['5', '4', '3', 'p2', '2', 'p1'];
+            const currentIndex = levels.indexOf(level);
+            return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
+        }
+
+        function nextLevel() {
+            const nextLevelCode = getNextLevel(currentLevel);
+            if (nextLevelCode) {
+                startQuiz(nextLevelCode);
+            }
+        }
+
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        levelSelection.addEventListener('click', (event) => {
+            if (event.target.classList.contains('level-button')) {
+                const level = event.target.dataset.level;
+                startQuiz(level);
+            }
+        });
+
+    </script>
+</body>
+</html>
